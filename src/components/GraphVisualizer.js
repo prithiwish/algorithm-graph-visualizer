@@ -8,12 +8,12 @@ function GraphVisualizer({ goBack }) {
     const [directed, setDirected] = useState(false);
     const [visited, setVisited] = useState([]);
     const [order, setOrder] = useState([]);
+    const [status, setStatus] = useState("");
 
     const containerRef = useRef(null);
 
     const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
-    // 🔹 ADD NODE
     const addNode = (e) => {
         if (mode !== "node") return;
 
@@ -29,7 +29,6 @@ function GraphVisualizer({ goBack }) {
         ]);
     };
 
-    // 🔹 ADD EDGE
     const handleNodeClick = (node) => {
         if (mode !== "edge") return;
 
@@ -44,7 +43,6 @@ function GraphVisualizer({ goBack }) {
         }
     };
 
-    // 🔹 GET NEIGHBORS
     const getNeighbors = (id) => {
         let res = [];
 
@@ -56,12 +54,12 @@ function GraphVisualizer({ goBack }) {
         return res;
     };
 
-    // 🔹 BFS
     const bfs = async () => {
         if (nodes.length === 0) return;
 
         setVisited([]);
         setOrder([]);
+        setStatus("Traversal Started...");
 
         let queue = [0];
         let vis = new Array(nodes.length).fill(false);
@@ -84,14 +82,16 @@ function GraphVisualizer({ goBack }) {
                 });
             }
         }
+
+        setStatus("Traversal Completed");
     };
 
-    // 🔹 DFS
     const dfs = async () => {
         if (nodes.length === 0) return;
 
         setVisited([]);
         setOrder([]);
+        setStatus("Traversal Started...");
 
         let stack = [0];
         let vis = new Array(nodes.length).fill(false);
@@ -114,20 +114,45 @@ function GraphVisualizer({ goBack }) {
                 });
             }
         }
+
+        setStatus("Traversal Completed");
+    };
+
+    const resetGraph = () => {
+        setNodes([]);
+        setEdges([]);
+        setVisited([]);
+        setOrder([]);
+        setSelected(null);
+        setStatus("");
     };
 
     return (
-        <div style={{ textAlign: "center" }}>
+        <div style={{ padding: "20px" }}>
             <button onClick={goBack}>⬅ Back</button>
 
             <h2>Graph Visualizer</h2>
 
-            {/* CONTROLS */}
-            <div style={{ marginBottom: "10px" }}>
-                <button onClick={() => setMode("node")}>Add Node</button>
-                <button onClick={() => setMode("edge")}>Add Edge</button>
+            {/* 🔥 CONTROL PANEL */}
+            <div style={{
+                display: "flex",
+                gap: "10px",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                background: "#fff",
+                padding: "15px",
+                borderRadius: "10px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+            }}>
+                <button onClick={() => setMode("node")}>
+                    Add Node
+                </button>
 
-                <label style={{ marginLeft: "10px" }}>
+                <button onClick={() => setMode("edge")}>
+                    Add Edge
+                </button>
+
+                <label>
                     Directed
                     <input
                         type="checkbox"
@@ -135,11 +160,19 @@ function GraphVisualizer({ goBack }) {
                     />
                 </label>
 
-                <button onClick={bfs} style={{ marginLeft: "10px" }}>
-                    BFS
-                </button>
-
+                <button onClick={bfs}>BFS</button>
                 <button onClick={dfs}>DFS</button>
+                <button onClick={resetGraph}>Reset</button>
+            </div>
+
+            {/* MODE DISPLAY */}
+            <div style={{ marginTop: "10px" }}>
+                <b>Mode:</b> {mode === "node" ? "Add Node" : "Add Edge"}
+            </div>
+
+            {/* STATUS */}
+            <div style={{ marginTop: "5px", color: "green" }}>
+                {status}
             </div>
 
             {/* TRAVERSAL ORDER */}
@@ -157,9 +190,9 @@ function GraphVisualizer({ goBack }) {
                     height: "500px",
                     position: "relative",
                     border: "1px solid black",
+                    marginTop: "20px"
                 }}
             >
-                {/* SVG EDGES */}
                 <svg width="100%" height="100%">
                     <defs>
                         <marker
@@ -178,8 +211,7 @@ function GraphVisualizer({ goBack }) {
                     {edges.map((e, i) => {
                         const from = nodes[e.from];
                         const to = nodes[e.to];
-
-                        if (!from || !to) return null; // 🔥 safety
+                        if (!from || !to) return null;
 
                         const dx = to.x - from.x;
                         const dy = to.y - from.y;
@@ -205,7 +237,6 @@ function GraphVisualizer({ goBack }) {
                     })}
                 </svg>
 
-                {/* NODES */}
                 {nodes.map((node) => (
                     <div
                         key={node.id}
